@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using ZadanieRek.CityRepo;
 using ZadanieRek.Other;
 
 namespace ZadanieRek.Data_access
@@ -18,7 +19,7 @@ namespace ZadanieRek.Data_access
         static HttpClient client = new HttpClient();
         static int numOfDays = 5;
         static int progressCounter = 0;
-        static HashSet<WeatherData> weatherDataSet = new HashSet<WeatherData>();
+        static HashSet<WeatherData5Days> weatherDataSet = new HashSet<WeatherData5Days>();
         static ProgressBar ProgressBar = new ProgressBar(numOfDays);
 
         private static async Task<string> GetWeaterInfoAsync(string path)
@@ -38,7 +39,7 @@ namespace ZadanieRek.Data_access
 
         }
 
-        public static void GetDataFromLast5Days(int choice)
+        public static void GetDataFromLast5Days(string cityName, CitiesRepository citiesRepository)
         {
             DateTime currentTime = DateTime.UtcNow;
             const int secInDay = 86400;
@@ -51,7 +52,7 @@ namespace ZadanieRek.Data_access
 
             for (int i = 0; i < numOfDays; i++)
             {
-                task = GetDataFromURLAsync(choice, dt[i]);
+                task = GetDataFromURLAsync(cityName, dt[i], citiesRepository);
                 task.Wait();
             }
 
@@ -73,24 +74,21 @@ namespace ZadanieRek.Data_access
             await ProgressBar.ResetProgress();
         }
 
-        private static async Task GetDataFromURLAsync(int cityIndex, long dt)
+        private static async Task GetDataFromURLAsync(string cityName, long dt, CitiesRepository citiesRepository)
         {
             string APIKey = "1f880e3d3fdc990d8ec44b5d3a14a00e";
             double lat = -1000, lon = -1000;
-            string? cityName;
 
-            City city = new City();
-            city = city.FindCity(cityIndex);
+            City city = citiesRepository.FindCity(cityName);
             lat = city.Lat;
             lon = city.Lon;
-            cityName = city.Name;
 
             if(lat == -1000 || lon == -1000) { Console.WriteLine("Blad podczas wyboru miasta! FUNC_RUNASYNC_IN_APIDATAACCESS.CS\n"); return; }
 
             string url = $"https://api.openweathermap.org/data/3.0/onecall/timemachine?lat={lat}&lon={lon}&exclude=minutely,hourly&dt={dt}&appid={APIKey}";
 
             string weatherApiData;
-            WeatherData? weatherData;
+            WeatherData5Days? weatherData;
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -100,7 +98,7 @@ namespace ZadanieRek.Data_access
             try
             {
                 weatherApiData = await GetWeaterInfoAsync(url);
-                weatherData = JsonSerializer.Deserialize<WeatherData>(weatherApiData, options);
+                weatherData = JsonSerializer.Deserialize<WeatherData5Days>(weatherApiData, options);
                 weatherData.CityName = cityName;
                 weatherData.SaveFile(dt);
                 weatherDataSet.Add(weatherData);
@@ -112,9 +110,9 @@ namespace ZadanieRek.Data_access
             await UpdateProgress();
         }
 
-        public static void ReadDataFromLast5Days(int choice)
+        public static void ReadDataFromLast5Days(string cityName, CitiesRepository citiesRepository)
         {
-            Task task = ReadData(choice);
+            Task task = ReadData(cityName,citiesRepository);
             task.Wait();
             task = ResetProgress();
             task.Wait();
@@ -122,14 +120,14 @@ namespace ZadanieRek.Data_access
             Console.WriteLine(" READ completed.");
         }
 
-        private static async Task ReadData(int choice)
+        private static async Task ReadData(string cityName, CitiesRepository citiesRepository)
         {
-            string[] filePaths = CitiesConfig.GetFilePathsForChosenCity(choice);
+            string[] filePaths = citiesRepository.GetFilePathsForChosenCity(cityName);
 
             foreach (string path in filePaths)
             {
-                WeatherData weatherData = new WeatherData();
-                weatherData = weatherData.ReadFile(path);
+                WeatherData5Days weatherData = new WeatherData5Days();
+                weatherData = (WeatherData5Days)weatherData.ReadFile(path);
                 weatherData.CityName = Path.GetFileName(path).Split('_')[0];
                 if (weatherData != null) weatherDataSet.Add(weatherData);
                 await UpdateProgress();
@@ -138,17 +136,16 @@ namespace ZadanieRek.Data_access
             Task.WaitAll();
         }
 
-        public static void RemoveOldData(int choice)
+        public static void RemoveOldData(string cityName, CitiesRepository citiesRepository)
         {
-            string[] filePaths = CitiesConfig.GetFilePathsForChosenCity(choice);
+            string[] filePaths = citiesRepository.GetFilePathsForChosenCity(cityName);
 
             foreach (string path in filePaths)
             {
                 File.Delete(path);
             }
 
-            City city = new City();
-            city.FindCity(choice);
+            City city = citiesRepository.FindCity(cityName);
 
             Task task = RemoveData(city);
             task.Wait();
@@ -160,7 +157,7 @@ namespace ZadanieRek.Data_access
 
         private static async Task RemoveData(City city)
         {
-            foreach (WeatherData data in weatherDataSet)
+            foreach (WeatherData5Days data in weatherDataSet)
             {
                 if (data.CityName == city.Name)
                 {
@@ -170,13 +167,12 @@ namespace ZadanieRek.Data_access
             }
         }
 
-        public static List<WeatherData> GetChosenCityWeatherData(int cityIndex) 
+        public static List<WeatherData5Days> GetChosenCityWeatherData(string cityName, CitiesRepository citiesRepository) 
         {
-            List<WeatherData> weatherData = new List<WeatherData>();
-            City city = new City();
-            city = city.FindCity(cityIndex);
+            List<WeatherData5Days> weatherData = new List<WeatherData5Days>();
+            City city = citiesRepository.FindCity(cityName);
 
-            foreach (WeatherData data in weatherDataSet) 
+            foreach (WeatherData5Days data in weatherDataSet) 
             {
                 if(data.CityName == city.Name)
                 {

@@ -38,7 +38,8 @@ namespace ZadanieRek.Other
 
         public async Task UpdateProgress(int currVal)
         {
-            progress.Report(currVal);
+            this.currVal = currVal;
+            progress.Report(this.currVal);
             await Task.Delay(20);
         }
 

@@ -5,10 +5,11 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using ZadanieRek.Interfaces;
 
 namespace ZadanieRek.Data_access
 {
-    public class WeatherData
+    public class WeatherData5Days : IWeatherData
     {
         public string? CityName { get; set; }
         public double Lat { get; set; }
@@ -19,7 +20,7 @@ namespace ZadanieRek.Data_access
 
         private string? filePath;
 
-        public WeatherData ReadFile(string filePath)
+        public IWeatherData ReadFile(string filePath)
         {
             var options = new JsonSerializerOptions
             {
@@ -28,14 +29,14 @@ namespace ZadanieRek.Data_access
             };
             string json = File.ReadAllText(filePath);
 
-            WeatherData? weatherData = JsonSerializer.Deserialize<WeatherData>(json, options);
+            WeatherData5Days? weatherData = JsonSerializer.Deserialize<WeatherData5Days>(json, options);
 
             return weatherData;
         }
         public void SaveFile(long dt)
         {
             filePath = Path.Combine(Environment.CurrentDirectory, @"..\..\..\DataFiles\", CityName + "_dt_" + dt + ".json");
-            string weatherData = JsonSerializer.Serialize(this, typeof(WeatherData));
+            string weatherData = JsonSerializer.Serialize(this, typeof(WeatherData5Days));
             File.WriteAllText(filePath, weatherData);
         }
     }
