@@ -30,6 +30,10 @@ namespace ZadanieRek.Menu
                 {
                     AppOpen = false;
                 }
+                else if(commandParts[0] == "list")
+                {
+                    Repositories.citiesRepository.ShowCities();
+                }
                 else if (Repositories.weatherTasks.CheckIfTaskExists(commandParts[0])) 
                 {
                     string cityName = Repositories.citiesRepository.FindCityFullName(commandParts[1]);

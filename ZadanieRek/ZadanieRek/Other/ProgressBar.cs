@@ -46,7 +46,7 @@ namespace ZadanieRek.Other
             Console.SetCursorPosition(x, y);
             Console.Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(x, y);
-            Console.Write("Progress: [{0}{1}] {2}%", new string('|', progress/10), new string(' ', (maxVal - currVal)*10), progress);
+            Console.Write("Progress: [{0}{1}] {2}%", new string('+', progress/10), new string('=', ((maxVal - currVal)/maxVal)*10), progress);
         }
 
         public async Task UpdateProgress(int currVal)
