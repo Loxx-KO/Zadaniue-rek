@@ -9,7 +9,8 @@ namespace ZadanieRek.Interfaces
 {
     public interface IWeatherTask
     {
-        public bool CheckTask();
-        public void RunTask();
+        public bool CheckTask(string cityName);
+        public void RunTask(string cityName);
+        public void ShowResult();
     }
 }

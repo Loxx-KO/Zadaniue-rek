@@ -1,9 +1,11 @@
-﻿using ZadanieRek.CityRepo;
+﻿using ZadanieRek.DataRepo;
+using ZadanieRek.DataRepo.CityRepo;
 using ZadanieRek.Menu;
 
 try
 {
-    CitiesConfig.ReadConfFile();
+    CitiesConfig citiesConfig = new CitiesConfig();
+    citiesConfig.ReadConfFile();
 }
 catch (Exception ex)
 {
